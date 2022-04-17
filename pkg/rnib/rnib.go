@@ -50,9 +50,9 @@ func (c *Client) HasMETRanFunction(ctx context.Context, nodeID topoapi.ID, oid s
 	}
 
 	for _, sm := range e2Node.GetServiceModels() {
-		log.Warn("the SM OID is :", sm.OID, sm.Name)
+		log.Info("the SM OID is :", sm.OID, sm.Name)
 		if sm.OID == "1.3.6.1.4.1.53148.1.2.2.97" {
-			log.Warn("this is the one we are suposed to send a sub request to")
+			log.Info("this is the one we are suposed to send a sub request to")
 			return true
 		}
 	}
