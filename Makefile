@@ -56,7 +56,6 @@ onos-kpimon-docker:
 	@go mod vendor
 	docker build . -f build/onos-kpimon/Dockerfile \
 		-t onosproject/onos-kpimon:${ONOS_KPIMON_VERSION}
-	@rm -rf vendor
 
 images: # @HELP build all Docker images
 images: build onos-kpimon-docker
