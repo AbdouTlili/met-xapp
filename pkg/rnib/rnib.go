@@ -51,6 +51,8 @@ func (c *Client) HasMETRanFunction(ctx context.Context, nodeID topoapi.ID, oid s
 
 	for _, sm := range e2Node.GetServiceModels() {
 		log.Info(sm.OID, "-- ", sm.GetName())
+		log.Info("len is -- ", len(e2Node.GetServiceModels()))
+
 		if sm.OID == oid {
 			log.Info("this is the one we are suposed to send a sub request to")
 			return true

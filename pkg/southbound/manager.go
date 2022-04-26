@@ -29,7 +29,7 @@ const metServiceModelOID = "1.3.6.1.4.1.53148.1.2.2.98"
 // NewManager creates a new subscription manager
 func NewManager() (Manager, error) {
 
-	serviceModelName := e2client.ServiceModelName("e2sm_met")
+	serviceModelName := e2client.ServiceModelName("e2sm-met")
 	serviceModelVersion := e2client.ServiceModelVersion("v1")
 	appID := e2client.AppID("onos-met")
 	e2Client := e2client.NewClient(
@@ -125,11 +125,13 @@ func (m *Manager) createSubscription(ctx context.Context, e2nodeID topoapi.ID) e
 	}
 	log.Debugf("subSpec: %v", subSpec)
 
-	_, err = node.Subscribe(ctx, subName, subSpec, ch)
+	channelID, err := node.Subscribe(ctx, subName, subSpec, ch)
 	if err != nil {
 		log.Warn(err)
 		return err
 	}
+
+	log.Info("sub channelID :", channelID)
 
 	// _, err = m.streams.OpenReader(ctx, node, subName, channelID, subSpec)
 	// if err != nil {

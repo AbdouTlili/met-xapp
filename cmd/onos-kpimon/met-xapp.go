@@ -36,17 +36,6 @@ func main() {
 	}
 
 	log.Info("Starting met-xapp")
-	// cfg := manager.Config{
-	// 	CAPath:      *caPath,
-	// 	KeyPath:     *keyPath,
-	// 	CertPath:    *certPath,
-	// 	E2tEndpoint: *e2tEndpoint,
-	// 	GRPCPort:    *grpcPort,
-	// 	RicActionID: int32(*ricActionID),
-	// 	ConfigPath:  *configPath,
-	// 	SMName:      *smName,
-	// 	SMVersion:   *smVersion,
-	// }
 
 	subManager, _ := southbound.NewManager()
 	subManager.Start()
