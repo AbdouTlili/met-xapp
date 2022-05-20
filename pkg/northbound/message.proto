@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option go_package = "github.com/AbdouTlili/met-xapp/pkg/northbound";
+
+
+message Parameter{
+    string name = 1;
+    string value = 2;    
+}
+
+message Payload{
+  double value = 1;
+  string unit =2;
+  repeated Parameter params= 3;
+}
+
+message Kpi{
+  enum NSSMF {
+    NFVO = 0;
+    RAN = 1;
+    SO = 2;
+  }
+
+  NSSMF nssmf = 1;
+    
+  int64 id =  2;
+    
+  string region = 3;
+
+  double timestamp = 4;
+
+  int64 nssid = 6;
+
+  string metric = 7;
+
+  string unit = 8;
+
+  Payload payload = 9;
+}
+
