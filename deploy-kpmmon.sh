@@ -18,7 +18,7 @@ echo -e "${RED}building latest docker image  ...${NC}"
 make images
 
 echo -e "${RED}deploying kpimon ...${NC}"
-helm install -n sdran kpimon-test $path/sdran-helm-charts/onos-kpimon --wait
+helm install -n sdran kpimon-test $path/sd-ran-helm-charts/onos-kpimon --wait
 echo
 
 
