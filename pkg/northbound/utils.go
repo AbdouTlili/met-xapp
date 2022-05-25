@@ -1,15 +1,25 @@
 package northbound
 
+<<<<<<< HEAD
 func CreateParameter(name string, value string) Parameter {
 	return Parameter{
+=======
+func CreateParameter(name string, value string) *Parameter {
+	return &Parameter{
+>>>>>>> working
 		Name:  name,
 		Value: value,
 	}
 }
 
 // here we   ignore the unit sinc it is duplicated and already exists in the mail KPM message
+<<<<<<< HEAD
 func CreatePayload(value float64, params []*Parameter) Payload {
 	return Payload{
+=======
+func CreatePayload(value float64, params []*Parameter) *Payload {
+	return &Payload{
+>>>>>>> working
 		Value:  value,
 		Params: params,
 	}

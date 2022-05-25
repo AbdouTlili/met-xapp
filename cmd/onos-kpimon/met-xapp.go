@@ -7,7 +7,7 @@ package main
 import (
 	"flag"
 
-	"github.com/AbdouTlili/met-xapp/pkg/southbound"
+	"github.com/AbdouTlili/met-xapp/pkg/northbound"
 
 	"github.com/onosproject/onos-lib-go/pkg/certs"
 	"github.com/onosproject/onos-lib-go/pkg/logging"
@@ -37,7 +37,14 @@ func main() {
 
 	log.Info("Starting met-xapp")
 
-	subManager, _ := southbound.NewManager()
-	subManager.Start()
+	nbManager, err := northbound.NewBrokerClient("amqp://172.21.16.115:5672/")
+
+	if err != nil {
+		log.Warn(err)
+	}
+
+	nbManager.Start()
+	// subManager, _ := southbound.NewManager()
+	// subManager.Start()
 
 }
