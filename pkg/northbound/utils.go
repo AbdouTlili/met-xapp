@@ -1,25 +1,17 @@
 package northbound
 
-<<<<<<< HEAD
-func CreateParameter(name string, value string) Parameter {
-	return Parameter{
-=======
+import "google.golang.org/protobuf/proto"
+
 func CreateParameter(name string, value string) *Parameter {
 	return &Parameter{
->>>>>>> working
 		Name:  name,
 		Value: value,
 	}
 }
 
 // here we   ignore the unit sinc it is duplicated and already exists in the mail KPM message
-<<<<<<< HEAD
-func CreatePayload(value float64, params []*Parameter) Payload {
-	return Payload{
-=======
 func CreatePayload(value float64, params []*Parameter) *Payload {
 	return &Payload{
->>>>>>> working
 		Value:  value,
 		Params: params,
 	}
@@ -46,4 +38,29 @@ func CreateKpiMessage(nssmf Kpi_NSSMF,
 		Unit:      unit,
 		Payload:   payload,
 	}
+}
+
+func CreateDummyKpiMessage() []byte {
+	param := CreateParameter("test", "test")
+
+	params := make([]*Parameter, 0)
+
+	params = append(params, param)
+
+	pld := CreatePayload(3.3, params)
+
+	kpi := CreateKpiMessage(Kpi_RAN,
+		15,
+		"R1",
+		3.66,
+		55,
+		"QCI",
+		"None",
+		pld)
+
+	protoBytes, err := proto.Marshal(kpi)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return protoBytes
 }

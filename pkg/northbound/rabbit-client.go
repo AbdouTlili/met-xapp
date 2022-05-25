@@ -62,9 +62,11 @@ func (b *BrokerClient) Start() {
 			case <-done:
 				return
 			case <-ticker.C:
+				log.Warn("a ticker cycle")
 				if err := b.Publish(); err != nil {
 					log.Warn(err)
 				}
+				log.Info("a Kpi is sent to the broker")
 
 			}
 		}
@@ -79,10 +81,9 @@ func (*BrokerClient) Stop() {
 }
 
 func (b *BrokerClient) Publish() error {
-
+	kpiBytes := CreateDummyKpiMessage()
 	message := amqp.Publishing{
-		ContentType: "text/plain",
-		Body:        []byte("this is a test message"),
+		Body: kpiBytes,
 	}
 
 	// Attempt to publish a message to the queue
