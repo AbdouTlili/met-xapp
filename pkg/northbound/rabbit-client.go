@@ -50,9 +50,9 @@ func NewBrokerClient(amqpServerUrl string) (BrokerClient, error) {
 
 func (b *BrokerClient) Start() {
 
-	log.Warn("Broker client Started")
+	log.Info("Northbound Broker Started")
 
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 
 	done := make(chan bool)
 
@@ -62,7 +62,6 @@ func (b *BrokerClient) Start() {
 			case <-done:
 				return
 			case <-ticker.C:
-				log.Warn("a ticker cycle")
 				if err := b.Publish(); err != nil {
 					log.Warn(err)
 				}

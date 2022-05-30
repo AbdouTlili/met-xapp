@@ -15,6 +15,8 @@ echo -e "${RED}cleaning kpimon previous deployment  ...${NC}"
 helm -n sdran uninstall kpimon-test 
 
 echo -e "${RED}building latest docker image  ...${NC}"
+
+go mod vendor 
 make images
 
 echo -e "${RED}deploying kpimon ...${NC}"

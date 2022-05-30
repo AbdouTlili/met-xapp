@@ -3,6 +3,8 @@ package southbound
 import (
 	"context"
 
+	"github.com/AbdouTlili/met-xapp/pkg/broker"
+	"github.com/AbdouTlili/met-xapp/pkg/monitoring"
 	"github.com/AbdouTlili/met-xapp/pkg/rnib"
 	"github.com/AbdouTlili/onos-e2-sm/servicemodels/e2sm_met/pdubuilder"
 	e2api "github.com/onosproject/onos-api/go/onos/e2t/e2/v1beta1"
@@ -16,6 +18,7 @@ type Manager struct {
 	e2client   e2client.Client
 	appID      string
 	RnibClient rnib.Client
+	streams    broker.Broker
 }
 
 type SubManager interface {
@@ -45,6 +48,7 @@ func NewManager() (Manager, error) {
 	return Manager{
 		e2client:   e2Client,
 		RnibClient: rnibClient,
+		streams:    broker.NewBroker(),
 	}, nil
 
 }
@@ -85,6 +89,9 @@ func (m *Manager) watchE2Connections(ctx context.Context) error {
 
 // Start starts subscription manager
 func (m *Manager) Start() error {
+
+	log.Info("Northbound Broker Started")
+
 	ctx, _ := context.WithCancel(context.Background())
 	err := m.watchE2Connections(ctx)
 	if err != nil {
@@ -130,14 +137,18 @@ func (m *Manager) createSubscription(ctx context.Context, e2nodeID topoapi.ID) e
 		log.Warn(err)
 		return err
 	}
+	streamReader, err := m.streams.OpenReader(ctx, node, subName, channelID, subSpec)
+	if err != nil {
+		return err
+	}
 
-	log.Info("sub channelID :", channelID)
+	go m.sendIndicationOnStream(streamReader.StreamID(), ch)
+	monitor := monitoring.NewMonitor(streamReader)
 
-	// _, err = m.streams.OpenReader(ctx, node, subName, channelID, subSpec)
-	// if err != nil {
-	// 	log.Warn(err)
-	// 	return err
-	// }
+	err = monitor.Start(ctx)
+	if err != nil {
+		log.Warn(err)
+	}
 
 	return nil
 }
@@ -157,25 +168,21 @@ func (m *Manager) createSubscriptionActions() []e2api.Action {
 	return actions
 }
 
-// func (m *Manager) getRanFunction(serviceModelsInfo map[string]*topoapi.ServiceModelInfo) (*topoapi.RSMRanFunction, error) {
-// 	for _, sm := range serviceModelsInfo {
-// 		smName := strings.ToLower(sm.Name)
-// 		if smName == string(m.serviceModel.Name) && sm.OID == oid {
-// 			rsmRanFunction := &topoapi.RSMRanFunction{}
-// 			for _, ranFunction := range sm.RanFunctions {
-// 				if ranFunction.TypeUrl == ranFunction.GetTypeUrl() {
-// 					err := prototypes.UnmarshalAny(ranFunction, rsmRanFunction)
-// 					if err != nil {
-// 						return nil, err
-// 					}
-// 					return rsmRanFunction, nil
-// 				}
-// 			}
-// 		}
-// 	}
-// 	return nil, errors.New(errors.NotFound, "cannot retrieve ran functions")
+func (m *Manager) sendIndicationOnStream(streamID broker.StreamID, ch chan e2api.Indication) {
+	streamWriter, err := m.streams.GetWriter(streamID)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 
-// }
+	for msg := range ch {
+		err := streamWriter.Send(msg)
+		if err != nil {
+			log.Warn(err)
+			return
+		}
+	}
+}
 
 func (m *Manager) createEventTriggerData(rtPeriod int64) ([]byte, error) {
 	e2SmMetEventTriggerDefinition, err := pdubuilder.CreateE2SmMetEventTriggerDefinition(rtPeriod)
