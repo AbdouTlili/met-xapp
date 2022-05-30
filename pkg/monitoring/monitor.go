@@ -6,8 +6,12 @@ package monitoring
 
 import (
 	"context"
+	"encoding/binary"
+	"fmt"
+	"math"
 
 	"github.com/AbdouTlili/met-xapp/pkg/broker"
+	"github.com/AbdouTlili/met-xapp/pkg/northbound"
 	e2api "github.com/onosproject/onos-api/go/onos/e2t/e2/v1beta1"
 	"google.golang.org/protobuf/proto"
 
@@ -20,13 +24,15 @@ var log = logging.GetLogger()
 
 // Monitor indication monitor
 type Monitor struct {
-	streamReader broker.StreamReader
+	streamReader           broker.StreamReader
+	northboundBrokerWriter northbound.BrokerClient
 }
 
-func NewMonitor(streamReader broker.StreamReader) *Monitor {
+func NewMonitor(streamReader broker.StreamReader, nbBrokerWriter northbound.BrokerClient) *Monitor {
 
 	return &Monitor{
-		streamReader: streamReader,
+		streamReader:           streamReader,
+		northboundBrokerWriter: nbBrokerWriter,
 	}
 }
 
@@ -84,9 +90,30 @@ func (m *Monitor) processIndicationFormat1(ctx context.Context, indication e2api
 
 	indHdrFormat1 := indHeader.GetIndicationHeaderFormats().GetIndicationHeaderFormat1()
 	indMsgFormat1 := indMessage.GetIndicationMessageFormats().GetIndicationMessageFormat1()
-	log.Info("Received indication header format 1 %v:", indHdrFormat1.MeasInfoList.Value[0].Value)
-	log.Info("Received indication message format 1:-- %v", indMsgFormat1.SubscriptId)
+
+	// log.Info("\nReceived indication header format 1 %v:", indHdrFormat1.MeasInfoList.Value[0].Value)
+
+	log.Info("\nReceived indication header format 1 %v:", indHdrFormat1.ColletStartTime.Value)
+	log.Info("\nReceived indication message format 1:-- %v", indMsgFormat1.SubscriptId)
+
+	// northbound.Kpi{
+	// 	Nssmf:     northbound.Kpi_RAN,
+	// 	Id:        indHdrFormat1.MetNodeId.Value,
+	// 	Region:    "None",
+	// 	Timestamp: Float64frombytes(indHdrFormat1.ColletStartTime.Value),
+
+	// }
+
+	for mr, _ := range indMsgFormat1.MeasData.Value {
+		fmt.Printf("ueid is : %#v, uetag is :", mr)
+	}
 
 	return nil
 
+}
+
+func Float64frombytes(bytes []byte) float64 {
+	bits := binary.LittleEndian.Uint64(bytes)
+	float := math.Float64frombits(bits)
+	return float
 }
