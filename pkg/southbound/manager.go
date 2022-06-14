@@ -5,6 +5,7 @@ import (
 
 	"github.com/AbdouTlili/met-xapp/pkg/broker"
 	"github.com/AbdouTlili/met-xapp/pkg/monitoring"
+	"github.com/AbdouTlili/met-xapp/pkg/northbound"
 	"github.com/AbdouTlili/met-xapp/pkg/rnib"
 	"github.com/AbdouTlili/onos-e2-sm/servicemodels/e2sm_met/pdubuilder"
 	e2api "github.com/onosproject/onos-api/go/onos/e2t/e2/v1beta1"
@@ -15,10 +16,11 @@ import (
 )
 
 type Manager struct {
-	e2client   e2client.Client
-	appID      string
-	RnibClient rnib.Client
-	streams    broker.Broker
+	e2client       e2client.Client
+	appID          string
+	RnibClient     rnib.Client
+	streams        broker.Broker
+	nbBrokerClient northbound.BrokerClient
 }
 
 type SubManager interface {
@@ -30,7 +32,7 @@ var log = logging.GetLogger()
 const metServiceModelOID = "1.3.6.1.4.1.53148.1.2.2.98"
 
 // NewManager creates a new subscription manager
-func NewManager() (Manager, error) {
+func NewManager(brokerClient northbound.BrokerClient) (Manager, error) {
 
 	serviceModelName := e2client.ServiceModelName("e2sm-met")
 	serviceModelVersion := e2client.ServiceModelVersion("v1")
@@ -46,9 +48,10 @@ func NewManager() (Manager, error) {
 	}
 
 	return Manager{
-		e2client:   e2Client,
-		RnibClient: rnibClient,
-		streams:    broker.NewBroker(),
+		e2client:       e2Client,
+		RnibClient:     rnibClient,
+		streams:        broker.NewBroker(),
+		nbBrokerClient: brokerClient,
 	}, nil
 
 }
@@ -143,7 +146,7 @@ func (m *Manager) createSubscription(ctx context.Context, e2nodeID topoapi.ID) e
 	}
 
 	go m.sendIndicationOnStream(streamReader.StreamID(), ch)
-	monitor := monitoring.NewMonitor(streamReader)
+	monitor := monitoring.NewMonitor(streamReader, m.nbBrokerClient)
 
 	err = monitor.Start(ctx)
 	if err != nil {
