@@ -5,10 +5,9 @@
 package monitoring
 
 import (
-	"bytes"
 	"context"
 	"encoding/binary"
-	"html/template"
+	"encoding/json"
 	"math"
 
 	"github.com/AbdouTlili/met-xapp/pkg/broker"
@@ -106,34 +105,34 @@ func (m *Monitor) processIndicationFormat1(ctx context.Context, indication e2api
 
 	// }
 
-	t, err := template.New("").Parse(tmp)
-	if err != nil {
-		return err
-	}
-
 	for _, mr := range indMsgFormat1.MeasData.Value {
 		// fmt.Printf("\nueid is : %v, uetag is : %v, records are : \n", mr.UeId, mr.UeTag)
 		for i, mri := range mr.MeasRecordItemList.Value {
 			if i == len(mr.MeasRecordItemList.Value)-1 {
 				break
 			}
+			// creating the Labels in a map
+
+			labels := make(map[string]string)
+
+			labels["gnb_ue_ngap_id"] = mr.UeId.String()
+			labels["amf_ue_ngap_id"] = mr.MeasRecordItemList.Value[len(mr.MeasRecordItemList.Value)-1].GetValue()
+			labels["ue_tag"] = "None"
+
 			tmpKpi := KpiRec{
-				Kpi:            indHdrFormat1.MeasInfoList.Value[i].GetValue(),
-				Slice_id:       "None",
-				Source:         "RAN",
-				Timestamp:      indHdrFormat1.ColletStartTime.String(),
-				Unit:           "None",
-				Value:          mri.GetValue(),
-				Amf_ue_ngap_id: mr.MeasRecordItemList.Value[len(mr.MeasRecordItemList.Value)-1].GetValue(),
-				Ue_tag:         "None",
-				GNB_ue_ngap_id: mr.UeId.String(),
+				Kpi:       indHdrFormat1.MeasInfoList.Value[i].GetValue(),
+				Slice_id:  "None",
+				Source:    "RAN",
+				Timestamp: indHdrFormat1.ColletStartTime.String(),
+				Unit:      "None",
+				Value:     mri.GetValue(),
+				Labels:    labels,
 			}
 			log.Info(tmpKpi)
 
 			log.Info("KPI object created")
 
-			var tpl bytes.Buffer
-			err = t.Execute(&tpl, tmpKpi)
+			jsonPayload, err := json.Marshal(tmpKpi)
 			if err != nil {
 				return err
 			}
@@ -142,7 +141,8 @@ func (m *Monitor) processIndicationFormat1(ctx context.Context, indication e2api
 			// fmt.Printf("%v", result)
 
 			message := amqp.Publishing{
-				Body: tpl.Bytes(),
+				ContentType: "application/json",
+				Body:        jsonPayload,
 			}
 
 			// Attempt to publish a message to the queue
@@ -150,7 +150,6 @@ func (m *Monitor) processIndicationFormat1(ctx context.Context, indication e2api
 			if err := m.northboundBrokerWriter.ChannelBroker.Publish("", "onos-queue1", false, false, message); err != nil {
 				return err
 			}
-
 		}
 	}
 
@@ -170,15 +169,15 @@ func Float64frombytes(bytes []byte) float64 {
 }
 
 type KpiRec struct {
-	Kpi            string `json:"kpi"`
-	Slice_id       string `json:"slice_id"`
-	Source         string `json:"source"`
-	Timestamp      string `json:"timestamp"`
-	Unit           string `json:"unit"`
-	Value          string `json:"value"`
-	Amf_ue_ngap_id string `json:"Amf_ue_ngap_id"`
-	GNB_ue_ngap_id string `json:"GNB_ue_ngap_id"`
-	Ue_tag         string `json:"Ue_tag"`
+	Kpi       string            `json:"kpi"`
+	Slice_id  string            `json:"slice_id"`
+	Source    string            `json:"source"`
+	Timestamp string            `json:"timestamp"`
+	Unit      string            `json:"unit"`
+	Value     string            `json:"value"`
+	Labels    map[string]string `json:"labels"`
 }
 
+// this served a a teplate for the needed JSON message but no longer used by It still here for the sake of calrity
+// so someone who does not know what the structure of the json looks like can see this
 const tmp = `"{"kpi": "{{.Kpi}}","slice_id": "{{.Slice_id}}","source": "RAN","timestamp": "{{.Timestamp}}","unit": "{{.Unit}}","value": {{.Value}},"labels": [{"amf_ue_ngap_id":"{{.Amf_ue_ngap_id}}"},{"gNB_ue_ngap_id":"{{.GNB_ue_ngap_id}}"},{"ue_tag":"{{.Ue_tag}}"}]}"`
