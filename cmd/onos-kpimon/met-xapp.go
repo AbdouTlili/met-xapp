@@ -46,7 +46,7 @@ func main() {
 		log.Warn(err)
 	}
 
-	subManager, err := southbound.NewManager()
+	subManager, err := southbound.NewManager(nbManager)
 
 	if err != nil {
 		log.Warn(err)

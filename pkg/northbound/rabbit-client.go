@@ -1,8 +1,6 @@
 package northbound
 
 import (
-	"time"
-
 	"github.com/onosproject/onos-lib-go/pkg/logging"
 
 	"github.com/streadway/amqp"
@@ -11,7 +9,7 @@ import (
 type BrokerClient struct {
 	amqpServerUrl    string
 	connectionBroker *amqp.Connection
-	channelBroker    *amqp.Channel
+	ChannelBroker    *amqp.Channel
 }
 
 var log = logging.GetLogger()
@@ -23,12 +21,12 @@ func NewBrokerClient(amqpServerUrl string) (BrokerClient, error) {
 		return BrokerClient{}, err
 	}
 
-	channelBroker, err := connectionBroker.Channel()
+	ChannelBroker, err := connectionBroker.Channel()
 	if err != nil {
 		return BrokerClient{}, err
 	}
 
-	_, err = channelBroker.QueueDeclare(
+	_, err = ChannelBroker.QueueDeclare(
 		"onos-queue1", // the queue name
 		true,          // durable
 		false,         // autodelete
@@ -44,7 +42,7 @@ func NewBrokerClient(amqpServerUrl string) (BrokerClient, error) {
 	return BrokerClient{
 		amqpServerUrl:    amqpServerUrl,
 		connectionBroker: connectionBroker,
-		channelBroker:    channelBroker,
+		ChannelBroker:    ChannelBroker,
 	}, nil
 }
 
@@ -52,24 +50,24 @@ func (b *BrokerClient) Start() {
 
 	log.Info("Northbound Broker Started")
 
-	ticker := time.NewTicker(10 * time.Second)
+	// ticker := time.NewTicker(10 * time.Second)
 
 	done := make(chan bool)
 
-	go func() {
-		for {
-			select {
-			case <-done:
-				return
-			case <-ticker.C:
-				if err := b.Publish(); err != nil {
-					log.Warn(err)
-				}
-				log.Info("a Kpi is sent to the broker")
+	// go func() {
+	// 	for {
+	// 		select {
+	// 		case <-done:
+	// 			return
+	// 		case <-ticker.C:
+	// 			if err := b.Publish(); err != nil {
+	// 				log.Warn(err)
+	// 			}
+	// 			log.Info("a Kpi is sent to the broker")
 
-			}
-		}
-	}()
+	// 		}
+	// 	}
+	// }()
 
 	<-done
 
@@ -87,7 +85,7 @@ func (b *BrokerClient) Publish() error {
 
 	// Attempt to publish a message to the queue
 
-	if err := b.channelBroker.Publish("", "onos-queue1", false, false, message); err != nil {
+	if err := b.ChannelBroker.Publish("", "onos-queue1", false, false, message); err != nil {
 		return err
 	}
 

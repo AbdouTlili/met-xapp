@@ -3,6 +3,7 @@ module github.com/AbdouTlili/met-xapp
 go 1.16
 
 require (
+<<<<<<< HEAD
 	github.com/AbdouTlili/onos-e2-sm v0.0.0-20220614131804-9af07528ec43 // indirect
 	github.com/AbdouTlili/onos-e2-sm/servicemodels/e2sm_met v0.0.0-20220530132152-fa751f55ef2d
 	github.com/Shopify/sarama v1.34.1 // indirect
@@ -11,6 +12,11 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/onosproject/onos-api/go v0.9.18
+=======
+	github.com/AbdouTlili/onos-e2-sm/servicemodels/e2sm_met v0.0.0-20220602124058-d341bbf24c12
+	github.com/atomix/atomix-go-framework v0.10.9 // indirect
+	github.com/onosproject/onos-api/go v0.9.16
+>>>>>>> 8cadfc40d22440e1eb5008672b28c99bae127844
 	github.com/onosproject/onos-e2-sm/servicemodels/e2sm_rc_pre v0.8.7
 	github.com/onosproject/onos-lib-go v0.8.16
 	github.com/onosproject/onos-ric-sdk-go v0.8.9
@@ -18,6 +24,7 @@ require (
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/spf13/viper v1.12.0 // indirect
 	github.com/streadway/amqp v1.0.0
+<<<<<<< HEAD
 	github.com/stretchr/testify v1.7.2
 	github.com/subosito/gotenv v1.4.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
@@ -29,4 +36,10 @@ require (
 	google.golang.org/genproto v0.0.0-20220608133413-ed9918b62aac // indirect
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/ini.v1 v1.66.6 // indirect
+=======
+	github.com/stretchr/testify v1.7.0
+	google.golang.org/genproto v0.0.0-20220601144221-27df5f98adab // indirect
+	google.golang.org/grpc v1.47.0 // indirect
+	google.golang.org/protobuf v1.28.0
+>>>>>>> 8cadfc40d22440e1eb5008672b28c99bae127844
 )
