@@ -52,7 +52,7 @@ func main() {
 		log.Warn(err)
 	}
 
-	go nbManager.Start()
+	// go nbManager.Start()
 
 	go subManager.Start()
 

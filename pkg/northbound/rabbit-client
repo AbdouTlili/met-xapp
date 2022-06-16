@@ -2,7 +2,6 @@ package northbound
 
 import (
 	"github.com/onosproject/onos-lib-go/pkg/logging"
-
 	"github.com/streadway/amqp"
 )
 
