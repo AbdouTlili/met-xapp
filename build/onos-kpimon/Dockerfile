@@ -18,8 +18,11 @@ COPY build/build-tools /go/src/github.com/onosproject/onos-kpimon/build/build-to
 
 RUN cd /go/src/github.com/onosproject/onos-kpimon && GOFLAGS=-mod=vendor make ${ONOS_MAKE_TARGET}
 
-FROM gcr.io/distroless/base-debian10
+# FROM gcr.io/distroless/base-debian10      
+
 # RUN apk add libc6-compat
+
+FROM ubuntu:latest
 
 USER nobody
 

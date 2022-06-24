@@ -1,8 +1,6 @@
 package northbound
 
 import (
-	"fmt"
-
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/onosproject/onos-lib-go/pkg/logging"
 )
@@ -16,28 +14,37 @@ var log = logging.GetLogger()
 
 func NewBrokerClient(kafkaTopic string) (BrokerClient, error) {
 
-	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
+	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "172.21.16.114:30007"})
 	if err != nil {
 		return BrokerClient{}, err
 	}
 
-	defer p.Close()
+	// defer p.Close()
 
+	return BrokerClient{Topic: kafkaTopic, Producer: p}, nil
+}
+
+func (b *BrokerClient) Start() {
+
+	log.Info("Northbound Broker Started")
+
+	forever := make(chan bool)
 	// Delivery report handler for produced messages
 	go func() {
-		for e := range p.Events() {
+		log.Infof("Delivery report handler for produced messages started \n")
+		for e := range b.Producer.Events() {
 			switch ev := e.(type) {
 			case *kafka.Message:
 				if ev.TopicPartition.Error != nil {
-					fmt.Printf("Delivery failed: %v\n", ev.TopicPartition)
+					log.Warnf("Delivery failed: %v\n", ev.TopicPartition)
 				} else {
-					fmt.Printf("Delivered message to %v\n", ev.TopicPartition)
+					log.Infof("Delivered message to %v\n", ev.TopicPartition)
 				}
 			}
 		}
 	}()
 
-	return BrokerClient{Topic: kafkaTopic, Producer: p}, nil
+	<-forever
 }
 
 func (b *BrokerClient) Publish(messageBytes []byte) error {

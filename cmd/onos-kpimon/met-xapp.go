@@ -17,6 +17,42 @@ import (
 var log = logging.GetLogger()
 
 func main() {
+	// {
+
+	// 	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "172.21.16.115:9092"})
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	defer p.Close()
+
+	// 	// Delivery report handler for produced messages
+	// 	go func() {
+	// 		for e := range p.Events() {
+	// 			switch ev := e.(type) {
+	// 			case *kafka.Message:
+	// 				if ev.TopicPartition.Error != nil {
+	// 					fmt.Printf("Delivery failed: %v\n", ev.TopicPartition)
+	// 				} else {
+	// 					fmt.Printf("Delivered message to %v\n", ev.TopicPartition)
+	// 				}
+	// 			}
+	// 		}
+	// 	}()
+
+	// 	// Produce messages to topic (asynchronously)
+	// 	topic := "MyTopic"
+	// 	for _, word := range []string{"Welcome", "to", "the", "Confluent", "Kafka", "Golang", "client"} {
+	// 		p.Produce(&kafka.Message{
+	// 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+	// 			Value:          []byte(word),
+	// 		}, nil)
+	// 	}
+	// 	p.Flush(15 * 1000)
+	// }
+
+	// Wait for message deliveries before shutting down
+
 	caPath := flag.String("caPath", "", "path to CA certificate")
 	keyPath := flag.String("keyPath", "", "path to client private key")
 	certPath := flag.String("certPath", "", "path to client certificate")
@@ -40,19 +76,21 @@ func main() {
 
 	ready := make(chan bool)
 
-	nbManager, err := northbound.NewBrokerClient("amqp://172.21.16.115:5672/")
+	nbManager, err := northbound.NewBrokerClient("ran")
 
 	if err != nil {
 		log.Warn(err)
+		panic(err)
 	}
 
 	subManager, err := southbound.NewManager(nbManager)
 
 	if err != nil {
 		log.Warn(err)
+		panic(err)
 	}
 
-	// go nbManager.Start()
+	go nbManager.Start()
 
 	go subManager.Start()
 

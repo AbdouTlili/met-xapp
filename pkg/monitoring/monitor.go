@@ -7,6 +7,8 @@ package monitoring
 import (
 	"context"
 	"encoding/binary"
+
+	// "encoding/binary"
 	"math"
 	"strconv"
 
@@ -122,14 +124,18 @@ func (m *Monitor) processIndicationFormat1(ctx context.Context, indication e2api
 				Kpi:       indHdrFormat1.MeasInfoList.Value[i].GetValue(),
 				Slice_id:  "None",
 				Source:    "RAN",
-				Timestamp: indHdrFormat1.ColletStartTime.String(),
+				Timestamp: indHdrFormat1.ColletStartTime.GetValue(),
 				Unit:      "None",
 				Value:     mri.GetValue(),
 				Labels:    labels,
 			}
+
+			// log.Info(binary.BigEndian.Uint64(indHdrFormat1.ColletStartTime.GetValue()))
+			log.Infof("------ : %#v", indHdrFormat1.ColletStartTime.GetValue())
+
 			// log.Info(tmpKpi)
 
-			protoPayload, err := CreateKpiMessage(tmpKpi)
+			protoPayload, err := CreateKpiMessagefromObj(tmpKpi)
 
 			if err != nil {
 				return err
@@ -140,106 +146,30 @@ func (m *Monitor) processIndicationFormat1(ctx context.Context, indication e2api
 			// result := tpl.String()
 			// fmt.Printf("%v", result)
 
-			// Attempt to publish a message to the queue
+			log.Info("// Attempt to publish a message to the queue")
+
+			log.Infof("the payload content : %#v \n", protoPayload)
+
+			// tmpKpiDecode := northbound.Kpi{}
+			// if err := proto.Unmarshal(protoPayload, &tmpKpiDecode); err != nil {
+			// 	log.Warnf("\n error Unmarshalling KpiBytes : %v", err)
+
+			// }
+
+			// log.Infof("the decodede payload : %v ", protoPayload)
 
 			if err := m.northboundBrokerProducer.Publish(protoPayload); err != nil {
+				log.Warn("error : ", err)
 				return err
 			}
+
+			log.Info("message sent to the broker")
 		}
 	}
 
 	return nil
 
 }
-
-// func (m *Monitor) processIndicationFormat1(ctx context.Context, indication e2api.Indication) error {
-// 	indHeader := e2smmet.E2SmMetIndicationHeader{}
-// 	err := proto.Unmarshal(indication.Header, &indHeader)
-// 	if err != nil {
-// 		log.Warn(err)
-// 		return err
-// 	}
-// 	// log.Info(indHeader.IndicationHeaderFormats)
-
-// 	indMessage := e2smmet.E2SmMetIndicationMessage{}
-// 	err = proto.Unmarshal(indication.Payload, &indMessage)
-// 	if err != nil {
-// 		log.Warn(err)
-// 		return err
-// 	}
-
-// 	indHdrFormat1 := indHeader.GetIndicationHeaderFormats().GetIndicationHeaderFormat1()
-// 	indMsgFormat1 := indMessage.GetIndicationMessageFormats().GetIndicationMessageFormat1()
-
-// 	// log.Info("\nReceived indication header format 1 %v:", indHdrFormat1.MeasInfoList.Value[0].Value)
-
-// 	// log.Info("\nReceived indication header format 1 %v:", indHdrFormat1.ColletStartTime.Value)
-// 	// log.Info("\nReceived indication message format 1:-- %v", indMsgFormat1.SubscriptId)
-
-// 	// northbound.Kpi{
-// 	// 	Nssmf:     northbound.Kpi_RAN,
-// 	// 	Id:        indHdrFormat1.MetNodeId.Value,
-// 	// 	Region:    "None",
-// 	// 	Timestamp: Float64frombytes(indHdrFormat1.ColletStartTime.Value),
-
-// 	// }
-
-// 	for _, mr := range indMsgFormat1.MeasData.Value {
-// 		// fmt.Printf("\nueid is : %v, uetag is : %v, records are : \n", mr.UeId, mr.UeTag)
-// 		for i, mri := range mr.MeasRecordItemList.Value {
-// 			if i == len(mr.MeasRecordItemList.Value)-1 {
-// 				break
-// 			}
-// 			// creating the Labels in a map
-
-// 			labels := make(map[string]string)
-
-// 			labels["gnb_ue_ngap_id"] = strconv.FormatInt(mr.UeId.GetValue()-1, 10)
-// 			labels["amf_ue_ngap_id"] = mr.MeasRecordItemList.Value[len(mr.MeasRecordItemList.Value)-1].GetValue()
-// 			labels["ue_tag"] = "None"
-
-// 			tmpKpi := KpiRecObj{
-// 				Kpi:       indHdrFormat1.MeasInfoList.Value[i].GetValue(),
-// 				Slice_id:  "None",
-// 				Source:    "RAN",
-// 				Timestamp: indHdrFormat1.ColletStartTime.String(),
-// 				Unit:      "None",
-// 				Value:     mri.GetValue(),
-// 				Labels:    labels,
-// 			}
-// 			log.Info(tmpKpi)
-
-// 			log.Info("KPI object created")
-
-// 			jsonPayload, err := json.Marshal(tmpKpi)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			// result := tpl.String()
-// 			// fmt.Printf("%v", result)
-
-// 			message := amqp.Publishing{
-// 				ContentType: "application/json",
-// 				Body:        jsonPayload,
-// 			}
-
-// 			// Attempt to publish a message to the queue
-
-// 			if err := m.northboundBrokerProducer.ChannelBroker.Publish("", "onos-queue1", false, false, message); err != nil {
-// 				return err
-// 			}
-// 		}
-// 	}
-
-// 	// log.Info("Received indication header format 1 %v:", indHdrFormat1.MeasInfoList.Value[0].Value)
-// 	// log.Info("Received indication message format 1:-- %v", indMsgFormat1.SubscriptId)
-// 	// log.Info("\nMET  1 :-- %v", indMsgFormat1.MeasData.Value[0].GetMeasRecordItem()[0].GetInteger())
-// 	// log.Info("\n\nMET  2 :-- %v", indMsgFormat1.MeasData.Value[0].GetMeasRecordItem()[1].GetInteger())
-
-// 	return nil
-
-// }
 
 func Float64frombytes(bytes []byte) float64 {
 	bits := binary.LittleEndian.Uint64(bytes)
@@ -251,7 +181,7 @@ type KpiRecObj struct {
 	Kpi       string            `json:"kpi"`
 	Slice_id  string            `json:"slice_id"`
 	Source    string            `json:"source"`
-	Timestamp string            `json:"timestamp"`
+	Timestamp []byte            `json:"timestamp"`
 	Unit      string            `json:"unit"`
 	Value     string            `json:"value"`
 	Labels    map[string]string `json:"labels"`
@@ -261,7 +191,7 @@ type KpiRecObj struct {
 // so someone who does not know what the structure of the json looks like can see this
 const tmp = `"{"kpi": "{{.Kpi}}","slice_id": "{{.Slice_id}}","source": "RAN","timestamp": "{{.Timestamp}}","unit": "{{.Unit}}","value": {{.Value}},"labels": [{"amf_ue_ngap_id":"{{.Amf_ue_ngap_id}}"},{"gNB_ue_ngap_id":"{{.GNB_ue_ngap_id}}"},{"ue_tag":"{{.Ue_tag}}"}]}"`
 
-func CreateKpiMessage(kpiObj KpiRecObj) ([]byte, error) {
+func CreateKpiMessagefromObj(kpiObj KpiRecObj) ([]byte, error) {
 
 	gnb_ue_ngap_id := northbound.CreateParameter("gnb_ue_ngap_id", kpiObj.Labels["gnb_ue_ngap_id"])
 
@@ -271,28 +201,27 @@ func CreateKpiMessage(kpiObj KpiRecObj) ([]byte, error) {
 
 	value, err := strconv.ParseFloat(kpiObj.Value, 64)
 
-	if err == nil {
-		return nil, err
-	}
-
 	params := make([]*northbound.Parameter, 0)
 	params = append(params, gnb_ue_ngap_id, amf_ue_ngap_id, ue_tag)
 
 	payload := northbound.CreatePayload(value, params)
 	kpi := northbound.CreateKpiMessage(northbound.Kpi_RAN, // nssmf
-		0,          //id
-		"RAN",      //region
-		1.5,        //timestamp
+		0,     //id
+		"RAN", //region
+		float64(binary.BigEndian.Uint32([]byte(kpiObj.Timestamp))), //timestamp
 		0,          //nssid
 		kpiObj.Kpi, //metric
 		"None",     //unit
 		payload)    //payload
 
-	log.Infof("KPI object created : %#v", kpi)
+	// log.Infof("\n ========== KPI object created : %#v", kpi)
 
 	protoBytes, err := proto.Marshal(kpi)
 	if err != nil {
 		log.Fatal(err)
+		return []byte{}, err
 	}
+
+	// log.Infof("\n ========== KPI object bytes : %#v", protoBytes)
 	return protoBytes, nil
 }
