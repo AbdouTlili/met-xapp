@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"math"
+	"strconv"
 
 	"github.com/AbdouTlili/met-xapp/pkg/broker"
 	"github.com/AbdouTlili/met-xapp/pkg/northbound"
@@ -115,7 +116,7 @@ func (m *Monitor) processIndicationFormat1(ctx context.Context, indication e2api
 
 			labels := make(map[string]string)
 
-			labels["gnb_ue_ngap_id"] = mr.UeId.String()
+			labels["gnb_ue_ngap_id"] = strconv.FormatInt(mr.UeId.GetValue()-1, 10)
 			labels["amf_ue_ngap_id"] = mr.MeasRecordItemList.Value[len(mr.MeasRecordItemList.Value)-1].GetValue()
 			labels["ue_tag"] = "None"
 
@@ -123,7 +124,7 @@ func (m *Monitor) processIndicationFormat1(ctx context.Context, indication e2api
 				Kpi:       indHdrFormat1.MeasInfoList.Value[i].GetValue(),
 				Slice_id:  "None",
 				Source:    "RAN",
-				Timestamp: indHdrFormat1.ColletStartTime.String(),
+				Timestamp: binary.BigEndian.Uint32([]byte(indHdrFormat1.ColletStartTime.GetValue())),
 				Unit:      "None",
 				Value:     mri.GetValue(),
 				Labels:    labels,
@@ -172,7 +173,7 @@ type KpiRec struct {
 	Kpi       string            `json:"kpi"`
 	Slice_id  string            `json:"slice_id"`
 	Source    string            `json:"source"`
-	Timestamp string            `json:"timestamp"`
+	Timestamp uint32            `json:"timestamp"`
 	Unit      string            `json:"unit"`
 	Value     string            `json:"value"`
 	Labels    map[string]string `json:"labels"`
